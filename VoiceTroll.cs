@@ -7,7 +7,7 @@ using Network;
 
 namespace Oxide.Plugins
 {
-    [Info("Voice Troll", "Bazz3l", "1.0.5")]
+    [Info("Voice Troll", "Bazz3l", "1.0.6")]
     [Description("Troll players making them speak with recorded audio clips.")]
     class VoiceTroll : RustPlugin
     {
@@ -22,37 +22,37 @@ namespace Oxide.Plugins
         #endregion
 
         #region Stored
-        public class StoredData
+        class StoredData
         {
             public List<AudioClip> AudioClips = new List<AudioClip>();
         }
 
-        public class AudioClip
+        class AudioClip
         {
             public string ClipName;
             public List<byte[]> Data = new List<byte[]>();
             public static AudioClip FindByName(string clipName) => Instance.stored.AudioClips.Find(x => x.ClipName == clipName);
         }
 
-        public void SaveData() => Interface.Oxide.DataFileSystem.WriteObject(Name, stored);
+        void SaveData() => Interface.Oxide.DataFileSystem.WriteObject(Name, stored);
         #endregion
 
         #region Oxide
         protected override void LoadDefaultMessages()
         {
             lang.RegisterMessages(new Dictionary<string, string> {
-               { "InvalidSyntax", "Invalid syntax: /vc <play|select|create|remove> <name>, /vc record, /vc target <name|id>." },
-               { "NoPermission", "No permission." },
-               { "ClipNotFound", "Clip not found." },
-               { "ClipExists", "Clip exists already." },
-               { "ClipCreated", "{0} was created." },
-               { "ClipRemoved", "{0} was removed." },
-               { "ClipPlaying", "{0} is now playing." },
-               { "ClipSelected", "{0} is now selected." },
-               { "ClipProcessing", "A clip is already playing, please wait..." },
-               { "TargetFound", "{0} is now the current playback target." },
-               { "TargetNotFound", "No target found." },
-               { "RecordToggle", "Recording {0}." }
+                { "InvalidSyntax", "Invalid syntax: /vc <play|select|create|remove> <name>\n/vc record, toggle recording.\n/vc target <name|id>, set plaback target." },
+                { "NoPermission", "No permission." },
+                { "ClipNotFound", "Clip not found." },
+                { "ClipExists", "Clip already exists." },
+                { "ClipCreated", "{0} was created." },
+                { "ClipRemoved", "{0} was removed." },
+                { "ClipPlaying", "{0} is now playing." },
+                { "ClipSelected", "{0} is now selected." },
+                { "ClipProcessing", "A clip is already playing, please wait..." },
+                { "TargetFound", "{0} is now the current playback target." },
+                { "TargetNotFound", "No target found." },
+                { "RecordToggle", "Recording {0}." }
             }, this);
         }
 
@@ -130,7 +130,7 @@ namespace Oxide.Plugins
             Net.sv.write.Send(info);
         }
 
-        public void QueueClip(AudioClip sound)
+        void QueueClip(AudioClip sound)
         {
             coroutine = InvokeHandler.Instance.StartCoroutine(RunVoiceQueue(sound));
         }
