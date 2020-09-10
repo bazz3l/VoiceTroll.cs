@@ -7,7 +7,7 @@ using Network;
 
 namespace Oxide.Plugins
 {
-    [Info("Voice Troll", "Bazz3l", "1.0.2")]
+    [Info("Voice Troll", "Bazz3l", "1.0.3")]
     [Description("Troll players making them speak with recorded audio clips.")]
     class VoiceTroll : RustPlugin
     {
@@ -37,6 +37,23 @@ namespace Oxide.Plugins
         #endregion
 
         #region Oxide
+        protected override void LoadDefaultMessages()
+        {
+            lang.RegisterMessages(new Dictionary<string, string> {
+               { "InvalidSyntax", "Invalid syntax: /vc <play|select|create|remove> <name>, /vc record, /vc target <name|id>." },
+               { "ClipNotFound", "Clip not found." },
+               { "ClipExists", "{0} was created." },
+               { "ClipCreated", "{0} was created." },
+               { "ClipRemoved", "{0} was removed." },
+               { "ClipPlaying", "{0} is now playing." },
+               { "ClipSelected", "{0} is now selected." },
+               { "ClipProcessing", "A clip is already playing, please wait..." },
+               { "TargetFound", "{0} is now the current playback target." },
+               { "TargetNotFound", "No target found." },
+               { "RecordToggle", "Recording {0}." }
+            }, this);
+        }
+
         void Init()
         {
             Instance = this;
@@ -129,73 +146,73 @@ namespace Oxide.Plugins
         {
             if (args.Length < 1)
             {
-                player.ChatMessage("Invalid syntax: /vc play <name>.");
+                player.ChatMessage(Lang("InvalidSyntax", player.UserIDString));
                 return;
             }
 
             AudioClip sound = AudioClip.FindByName(string.Join("", args));
             if (sound == null)
             {
-                player.ChatMessage("No audio clip found by that name.");
+                player.ChatMessage(Lang("ClipNotFound", player.UserIDString));
                 return;
             }
 
             if (coroutine != null)
             {
-                player.ChatMessage("Already playing please wait...");
+                player.ChatMessage(Lang("ClipProcessing", player.UserIDString));
                 return;
             }
 
             QueueClip(sound);
 
-            player.ChatMessage($"Playing audio clip {sound.ClipName}.");
+            player.ChatMessage(Lang("ClipPlaying", player.UserIDString, sound.ClipName));
         }
 
         void SelectClip(BasePlayer player, params object[] args)
         {
             if (args.Length < 1)
             {
-                player.ChatMessage("Invalid syntax: /vp select <name>.");
+                player.ChatMessage(Lang("InvalidSyntax", player.UserIDString));
                 return;
             }
 
             AudioClip sound = AudioClip.FindByName(string.Join("", args));
             if (sound == null)
             {
-                player.ChatMessage("No audio clip found by that name.");
+                player.ChatMessage(Lang("ClipNotFound", player.UserIDString));
                 return;
             }
 
             currentClip = sound;
 
-            player.ChatMessage($"Playing audio clip {sound.ClipName}.");
+            player.ChatMessage(Lang("ClipSelected", player.UserIDString, sound.ClipName));
         }
 
         void RemoveClip(BasePlayer player, params object[] args)
         {
             if (args.Length < 1)
             {
-                player.ChatMessage("Invalid syntax: /vc remove <name>.");
+                player.ChatMessage(Lang("InvalidSyntax", player.UserIDString));
                 return;
             }
 
             AudioClip sound = AudioClip.FindByName(string.Join("", args));
             if (sound == null)
             {
-                player.ChatMessage("No audio clip found by that name.");
+                player.ChatMessage(Lang("ClipNotFound", player.UserIDString));
                 return;
             }
 
             stored.AudioClips.Remove(sound);
 
-            player.ChatMessage("Audio clip was removed.");
+            player.ChatMessage(Lang("ClipRemoved", player.UserIDString));
         }
 
         void CreateClip(BasePlayer player, params object[] args)
         {
             if (args.Length < 1)
             {
-                player.ChatMessage("Invalid syntax: /vc create <name>.");
+                player.ChatMessage(Lang("InvalidSyntax", player.UserIDString));
                 return;
             }
 
@@ -204,7 +221,7 @@ namespace Oxide.Plugins
             AudioClip sound = AudioClip.FindByName(clipName);
             if (sound != null)
             {
-                player.ChatMessage("Audio clip already exists.");
+                player.ChatMessage(Lang("ClipExists", player.UserIDString));
                 return;
             }
 
@@ -214,34 +231,34 @@ namespace Oxide.Plugins
 
             SaveData();
 
-            player.ChatMessage($"Audio clip {clipName} was created.");
+            player.ChatMessage(Lang("ClipCreated", sound.ClipName));
         }
 
         void ToggleRecord(BasePlayer player, params object[] args)
         {
             recording = !recording;
 
-            player.ChatMessage($"Recording {(recording ? "Enabled" : "Disabled")}.");
+            player.ChatMessage(Lang("RecordToggle", player.UserIDString, (recording ? "Enabled" : "Disabled")));
         }
 
         void FindTarget(BasePlayer player, params object[] args)
         {
             if (args.Length < 1)
             {
-                player.ChatMessage("Invalid syntax: /vc target <name|id>.");
+                player.ChatMessage(Lang("InvalidSyntax", player.UserIDString));
                 return;
             }
 
             BasePlayer target = FindPlayerTarget(string.Join(" ", args));
             if (target == null)
             {
-                player.ChatMessage("No target found.");
+                player.ChatMessage(Lang("TargetNotFound", player.UserIDString));
                 return;
             }
 
             netId = target.net.ID;
 
-            player.ChatMessage("Audio playback target set.");
+            player.ChatMessage(Lang("TargetFound", player.UserIDString, player.displayName));
         }
         #endregion
 
@@ -251,7 +268,7 @@ namespace Oxide.Plugins
         {
             if (args.Length < 1)
             {
-                player.ChatMessage("Invalid syntax: /vc <play|select|create|remove> <name>, /vc record, /vc target <name|id>.");
+                player.ChatMessage(Lang("InvalidSyntax", player.UserIDString));
                 return;
             }
 
@@ -276,10 +293,14 @@ namespace Oxide.Plugins
                     ToggleRecord(player, args);
                     break;
                 default:
-                    player.ChatMessage("Invalid syntax: /vc <play|select|create|remove> <name>, /vc record, /vc target <name|id>.");
+                    player.ChatMessage(Lang("InvalidSyntax", player.UserIDString));
                     break;
             }
         }
+        #endregion
+
+        #region Helpers
+        string Lang(string key, string id = null, params object[] args) => string.Format(lang.GetMessage(key, this, id), args);
         #endregion
     }
 }
