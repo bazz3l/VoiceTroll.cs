@@ -7,16 +7,17 @@ using Network;
 
 namespace Oxide.Plugins
 {
-    [Info("Voice Troll", "Bazz3l", "1.0.3")]
+    [Info("Voice Troll", "Bazz3l", "1.0.5")]
     [Description("Troll players making them speak with recorded audio clips.")]
     class VoiceTroll : RustPlugin
     {
         #region Fields
-        Coroutine coroutine;
+        const string permUse = "voicetroll.use";
         StoredData stored;
         AudioClip currentClip;
-        uint netId;
+        Coroutine coroutine;
         bool recording;
+        uint netId;
         static VoiceTroll Instance;
         #endregion
 
@@ -41,6 +42,7 @@ namespace Oxide.Plugins
         {
             lang.RegisterMessages(new Dictionary<string, string> {
                { "InvalidSyntax", "Invalid syntax: /vc <play|select|create|remove> <name>, /vc record, /vc target <name|id>." },
+               { "NoPermission", "No permission." },
                { "ClipNotFound", "Clip not found." },
                { "ClipExists", "{0} was created." },
                { "ClipCreated", "{0} was created." },
@@ -52,6 +54,11 @@ namespace Oxide.Plugins
                { "TargetNotFound", "No target found." },
                { "RecordToggle", "Recording {0}." }
             }, this);
+        }
+
+        void OnServerInitialized()
+        {
+            permission.RegisterPermission(permUse, this);
         }
 
         void Init()
@@ -75,7 +82,12 @@ namespace Oxide.Plugins
 
         void OnPlayerVoice(BasePlayer player, byte[] data)
         {
-            if (currentClip == null || !recording || !player.IsAdmin)
+            if (!permission.UserHasPermission(player.UserIDString, permUse))
+            {
+                return;
+            }
+
+            if (currentClip == null || !recording)
             {
                 return;
             }
@@ -205,7 +217,7 @@ namespace Oxide.Plugins
 
             stored.AudioClips.Remove(sound);
 
-            player.ChatMessage(Lang("ClipRemoved", player.UserIDString));
+            player.ChatMessage(Lang("ClipRemoved", player.UserIDString, sound.ClipName));
         }
 
         void CreateClip(BasePlayer player, params object[] args)
@@ -225,13 +237,15 @@ namespace Oxide.Plugins
                 return;
             }
 
-            stored.AudioClips.Add(new AudioClip { ClipName = clipName });
+            sound = new AudioClip { ClipName = clipName };
 
-            currentClip = sound;
+            stored.AudioClips.Add(sound);
 
             SaveData();
 
-            player.ChatMessage(Lang("ClipCreated", sound.ClipName));
+            currentClip = sound;
+
+            player.ChatMessage(Lang("ClipCreated", player.UserIDString, sound.ClipName));
         }
 
         void ToggleRecord(BasePlayer player, params object[] args)
@@ -258,7 +272,7 @@ namespace Oxide.Plugins
 
             netId = target.net.ID;
 
-            player.ChatMessage(Lang("TargetFound", player.UserIDString, player.displayName));
+            player.ChatMessage(Lang("TargetFound", player.UserIDString, target.displayName));
         }
         #endregion
 
@@ -266,6 +280,12 @@ namespace Oxide.Plugins
         [ChatCommand("vc")]
         void CommandVoiceClip(BasePlayer player, string command, string[] args)
         {
+            if (!permission.UserHasPermission(player.UserIDString, permUse))
+            {
+                player.ChatMessage(Lang("NoPermission", player.UserIDString));
+                return;
+            }
+
             if (args.Length < 1)
             {
                 player.ChatMessage(Lang("InvalidSyntax", player.UserIDString));
