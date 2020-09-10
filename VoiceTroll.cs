@@ -80,7 +80,7 @@ namespace Oxide.Plugins
         {
             foreach (byte[] data in sound.Data)
             {
-                SendVoice(data);
+                SendVoiceData(data);
 
                 yield return new WaitForSeconds(0.02f);
             }
@@ -90,7 +90,7 @@ namespace Oxide.Plugins
             coroutine = null;
         }
 
-        void SendVoice(byte[] data)
+        void SendVoiceData(byte[] data)
         {
             if (!Net.sv.write.Start())
             {
@@ -107,7 +107,7 @@ namespace Oxide.Plugins
             Net.sv.write.Send(info);
         }
 
-        public void QueueSound(AudioClip sound)
+        public void QueueClip(AudioClip sound)
         {
             coroutine = InvokeHandler.Instance.StartCoroutine(RunVoiceQueue(sound));
         }
@@ -135,7 +135,7 @@ namespace Oxide.Plugins
         {
             if (args.Length < 1)
             {
-                player.ChatMessage("Invalid syntax: /vp play <name>.");
+                player.ChatMessage("Invalid syntax: /vc play <name>.");
                 return;
             }
 
@@ -152,7 +152,7 @@ namespace Oxide.Plugins
                 return;
             }
 
-            QueueSound(sound);
+            QueueClip(sound);
 
             player.ChatMessage($"Playing audio clip {sound.ClipName}.");
         }
@@ -181,7 +181,7 @@ namespace Oxide.Plugins
         {
             if (args.Length < 1)
             {
-                player.ChatMessage("Invalid syntax: /vp remove <name>.");
+                player.ChatMessage("Invalid syntax: /vc remove <name>.");
                 return;
             }
 
@@ -201,7 +201,7 @@ namespace Oxide.Plugins
         {
             if (args.Length < 1)
             {
-                player.ChatMessage("Invalid syntax: /vp create <name>.");
+                player.ChatMessage("Invalid syntax: /vc create <name>.");
                 return;
             }
 
@@ -234,7 +234,7 @@ namespace Oxide.Plugins
         {
             if (args.Length < 1)
             {
-                player.ChatMessage("Invalid syntax: /vp find <name|id>.");
+                player.ChatMessage("Invalid syntax: /vc target <name|id>.");
                 return;
             }
 
@@ -247,17 +247,17 @@ namespace Oxide.Plugins
 
             netId = target.net.ID;
 
-            player.ChatMessage("Target set.");
+            player.ChatMessage("Audio playback target set.");
         }
         #endregion
 
         #region Commands
-        [ChatCommand("vp")]
-        void CommandVoicePlayback(BasePlayer player, string command, string[] args)
+        [ChatCommand("vc")]
+        void CommandVoiceClip(BasePlayer player, string command, string[] args)
         {
             if (args.Length < 1)
             {
-                player.ChatMessage("Invalid syntax: /vp <play|select|create|remove> <name>, /vp record, /vp target <name|id>.");
+                player.ChatMessage("Invalid syntax: /vc <play|select|create|remove> <name>, /vc record, /vc target <name|id>.");
                 return;
             }
 
@@ -282,7 +282,7 @@ namespace Oxide.Plugins
                     RecordSound(player, args);
                     break;
                 default:
-                    player.ChatMessage("Invalid syntax: /vp <play|select|create|remove> <name>, /vp record, /vp target <name|id>.");
+                    player.ChatMessage("Invalid syntax: /vc <play|select|create|remove> <name>, /vc record, /vc target <name|id>.");
                     break;
             }
         }
