@@ -44,7 +44,7 @@ namespace Oxide.Plugins
                { "InvalidSyntax", "Invalid syntax: /vc <play|select|create|remove> <name>, /vc record, /vc target <name|id>." },
                { "NoPermission", "No permission." },
                { "ClipNotFound", "Clip not found." },
-               { "ClipExists", "{0} was created." },
+               { "ClipExists", "Clip exists already." },
                { "ClipCreated", "{0} was created." },
                { "ClipRemoved", "{0} was removed." },
                { "ClipPlaying", "{0} is now playing." },
