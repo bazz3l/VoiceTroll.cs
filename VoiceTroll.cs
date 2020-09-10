@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Globalization;
+using System.Collections;
 using System.Linq;
 using UnityEngine;
 using Oxide.Core;
@@ -99,7 +100,7 @@ namespace Oxide.Plugins
         #endregion
 
         #region Core
-        IEnumerator<object> RunVoiceQueue(AudioClip sound)
+        IEnumerator RunVoiceQueue(AudioClip sound)
         {
             foreach (byte[] data in sound.Data)
             {
