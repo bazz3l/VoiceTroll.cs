@@ -7,14 +7,14 @@ using Network;
 
 namespace Oxide.Plugins
 {
-    [Info("Voice Troll", "Bazz3l", "1.0.0")]
+    [Info("Voice Troll", "Bazz3l", "1.0.1")]
     [Description("Troll players making them speak with recorded audio clips.")]
     class VoiceTroll : RustPlugin
     {
         #region Fields
         Coroutine coroutine;
         StoredData stored;
-        string currentClip;
+        AudioClip currentClip;
         uint netId;
         bool recording;
         static VoiceTroll Instance;
@@ -58,18 +58,12 @@ namespace Oxide.Plugins
 
         void OnPlayerVoice(BasePlayer player, byte[] data)
         {
-            if (!recording || !player.IsAdmin)
+            if (currentClip == null || !recording || !player.IsAdmin)
             {
                 return;
             }
 
-            AudioClip sound = AudioClip.FindByName(currentClip);
-            if (sound == null)
-            {
-                return;
-            }
-
-            sound.Data.Add(data);
+            currentClip.Data.Add(data);
 
             SaveData();
         }
@@ -172,7 +166,7 @@ namespace Oxide.Plugins
                 return;
             }
 
-            currentClip = sound.ClipName;
+            currentClip = sound;
 
             player.ChatMessage($"Playing audio clip {sound.ClipName}.");
         }
@@ -216,7 +210,7 @@ namespace Oxide.Plugins
 
             stored.AudioClips.Add(new AudioClip { ClipName = clipName });
 
-            currentClip = clipName;
+            currentClip = sound;
 
             SaveData();
 
