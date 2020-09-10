@@ -7,7 +7,7 @@ using Network;
 
 namespace Oxide.Plugins
 {
-    [Info("Voice Troll", "Bazz3l", "1.0.1")]
+    [Info("Voice Troll", "Bazz3l", "1.0.2")]
     [Description("Troll players making them speak with recorded audio clips.")]
     class VoiceTroll : RustPlugin
     {
@@ -125,7 +125,7 @@ namespace Oxide.Plugins
             return null;
         }
 
-        void PlaySound(BasePlayer player, params object[] args)
+        void PlayClip(BasePlayer player, params object[] args)
         {
             if (args.Length < 1)
             {
@@ -151,7 +151,7 @@ namespace Oxide.Plugins
             player.ChatMessage($"Playing audio clip {sound.ClipName}.");
         }
 
-        void SelectSound(BasePlayer player, params object[] args)
+        void SelectClip(BasePlayer player, params object[] args)
         {
             if (args.Length < 1)
             {
@@ -171,7 +171,7 @@ namespace Oxide.Plugins
             player.ChatMessage($"Playing audio clip {sound.ClipName}.");
         }
 
-        void RemoveSound(BasePlayer player, params object[] args)
+        void RemoveClip(BasePlayer player, params object[] args)
         {
             if (args.Length < 1)
             {
@@ -191,7 +191,7 @@ namespace Oxide.Plugins
             player.ChatMessage("Audio clip was removed.");
         }
 
-        void CreateSound(BasePlayer player, params object[] args)
+        void CreateClip(BasePlayer player, params object[] args)
         {
             if (args.Length < 1)
             {
@@ -217,7 +217,7 @@ namespace Oxide.Plugins
             player.ChatMessage($"Audio clip {clipName} was created.");
         }
 
-        void RecordSound(BasePlayer player, params object[] args)
+        void ToggleRecord(BasePlayer player, params object[] args)
         {
             recording = !recording;
 
@@ -258,22 +258,22 @@ namespace Oxide.Plugins
             switch (args[0].ToLower())
             {
                 case "play":
-                    PlaySound(player, args.Skip(1).ToArray());
+                    PlayClip(player, args.Skip(1).ToArray());
                     break;
                 case "create":
-                    CreateSound(player, args.Skip(1).ToArray());
+                    CreateClip(player, args.Skip(1).ToArray());
                     break;
                 case "select":
-                    SelectSound(player, args.Skip(1).ToArray());
+                    SelectClip(player, args.Skip(1).ToArray());
                     break;
                 case "remove":
-                    RemoveSound(player, args.Skip(1).ToArray());
+                    RemoveClip(player, args.Skip(1).ToArray());
                     break;
                 case "target":
                     FindTarget(player, args.Skip(1).ToArray());
                     break;
                 case "record":
-                    RecordSound(player, args);
+                    ToggleRecord(player, args);
                     break;
                 default:
                     player.ChatMessage("Invalid syntax: /vc <play|select|create|remove> <name>, /vc record, /vc target <name|id>.");
