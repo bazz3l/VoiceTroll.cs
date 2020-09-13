@@ -8,17 +8,17 @@ using Network;
 
 namespace Oxide.Plugins
 {
-    [Info("Voice Troll", "Bazz3l", "1.0.6")]
+    [Info("Voice Troll", "Bazz3l", "1.0.7")]
     [Description("Troll players making them speak with recorded audio clips.")]
     class VoiceTroll : RustPlugin
     {
         #region Fields
-        const string permUse = "voicetroll.use";
-        StoredData stored;
-        AudioClip currentClip;
-        Coroutine coroutine;
-        bool recording;
-        uint netId;
+        private const string _permUse = "voicetroll.use";
+        private AudioClip _currentClip;
+        private Coroutine _coroutine;
+        private bool _recording;
+        private uint _netId;
+        private StoredData _stored;
         static VoiceTroll Instance;
         #endregion
 
@@ -32,10 +32,10 @@ namespace Oxide.Plugins
         {
             public string ClipName;
             public List<byte[]> Data = new List<byte[]>();
-            public static AudioClip FindByName(string clipName) => Instance.stored.AudioClips.Find(x => x.ClipName == clipName);
+            public static AudioClip FindByName(string clipName) => Instance._stored.AudioClips.Find(x => x.ClipName == clipName);
         }
 
-        void SaveData() => Interface.Oxide.DataFileSystem.WriteObject(Name, stored);
+        private void SaveData() => Interface.Oxide.DataFileSystem.WriteObject(Name, _stored);
         #endregion
 
         #region Oxide
@@ -57,50 +57,50 @@ namespace Oxide.Plugins
             }, this);
         }
 
-        void OnServerInitialized()
+        private void OnServerInitialized()
         {
-            permission.RegisterPermission(permUse, this);
+            permission.RegisterPermission(_permUse, this);
         }
 
-        void Init()
+        private void Init()
         {
             Instance = this;
 
-            stored = Interface.Oxide.DataFileSystem.ReadObject<StoredData>(Name);
+            _stored = Interface.Oxide.DataFileSystem.ReadObject<StoredData>(Name);
         }
 
-        void Unload()
+        private void Unload()
         {
-            if (coroutine != null)
+            if (_coroutine != null)
             {
-                InvokeHandler.Instance.StopCoroutine(coroutine);
+                InvokeHandler.Instance.StopCoroutine(_coroutine);
             }
 
-            coroutine = null;
+            _coroutine = null;
 
             Instance = null;
         }
 
-        void OnPlayerVoice(BasePlayer player, byte[] data)
+        private void OnPlayerVoice(BasePlayer player, byte[] data)
         {
-            if (!permission.UserHasPermission(player.UserIDString, permUse))
+            if (!permission.UserHasPermission(player.UserIDString, _permUse))
             {
                 return;
             }
 
-            if (currentClip == null || !recording)
+            if (_currentClip == null || !_recording)
             {
                 return;
             }
 
-            currentClip.Data.Add(data);
+            _currentClip.Data.Add(data);
 
             SaveData();
         }
         #endregion
 
         #region Core
-        IEnumerator RunVoiceQueue(AudioClip sound)
+        private IEnumerator RunVoiceQueue(AudioClip sound)
         {
             foreach (byte[] data in sound.Data)
             {
@@ -111,10 +111,10 @@ namespace Oxide.Plugins
 
             yield return new WaitForSeconds(0.02f);
 
-            coroutine = null;
+            _coroutine = null;
         }
 
-        void SendVoiceData(byte[] data)
+        private void SendVoiceData(byte[] data)
         {
             if (!Net.sv.write.Start())
             {
@@ -126,17 +126,17 @@ namespace Oxide.Plugins
             info.priority = Priority.Immediate;
 
             Net.sv.write.PacketID(Message.Type.VoiceData);
-            Net.sv.write.UInt32(netId);
+            Net.sv.write.UInt32(_netId);
             Net.sv.write.BytesWithSize(data);
             Net.sv.write.Send(info);
         }
 
-        void QueueClip(AudioClip sound)
+        private void QueueClip(AudioClip sound)
         {
-            coroutine = InvokeHandler.Instance.StartCoroutine(RunVoiceQueue(sound));
+            _coroutine = InvokeHandler.Instance.StartCoroutine(RunVoiceQueue(sound));
         }
 
-        BasePlayer FindPlayerTarget(string nameOrId)
+        private BasePlayer FindPlayerTarget(string nameOrId)
         {
             foreach (BasePlayer player in BasePlayer.allPlayerList)
             {
@@ -155,7 +155,7 @@ namespace Oxide.Plugins
             return null;
         }
 
-        void PlayClip(BasePlayer player, params object[] args)
+        private void PlayClip(BasePlayer player, params object[] args)
         {
             if (args.Length < 1)
             {
@@ -170,7 +170,7 @@ namespace Oxide.Plugins
                 return;
             }
 
-            if (coroutine != null)
+            if (_coroutine != null)
             {
                 player.ChatMessage(Lang("ClipProcessing", player.UserIDString));
                 return;
@@ -181,7 +181,7 @@ namespace Oxide.Plugins
             player.ChatMessage(Lang("ClipPlaying", player.UserIDString, sound.ClipName));
         }
 
-        void SelectClip(BasePlayer player, params object[] args)
+        private void SelectClip(BasePlayer player, params object[] args)
         {
             if (args.Length < 1)
             {
@@ -196,12 +196,12 @@ namespace Oxide.Plugins
                 return;
             }
 
-            currentClip = sound;
+            _currentClip = sound;
 
             player.ChatMessage(Lang("ClipSelected", player.UserIDString, sound.ClipName));
         }
 
-        void RemoveClip(BasePlayer player, params object[] args)
+        private void RemoveClip(BasePlayer player, params object[] args)
         {
             if (args.Length < 1)
             {
@@ -216,12 +216,12 @@ namespace Oxide.Plugins
                 return;
             }
 
-            stored.AudioClips.Remove(sound);
+            _stored.AudioClips.Remove(sound);
 
             player.ChatMessage(Lang("ClipRemoved", player.UserIDString, sound.ClipName));
         }
 
-        void CreateClip(BasePlayer player, params object[] args)
+        private void CreateClip(BasePlayer player, params object[] args)
         {
             if (args.Length < 1)
             {
@@ -240,23 +240,23 @@ namespace Oxide.Plugins
 
             sound = new AudioClip { ClipName = clipName };
 
-            stored.AudioClips.Add(sound);
+            _stored.AudioClips.Add(sound);
 
             SaveData();
 
-            currentClip = sound;
+            _currentClip = sound;
 
             player.ChatMessage(Lang("ClipCreated", player.UserIDString, sound.ClipName));
         }
 
-        void ToggleRecord(BasePlayer player, params object[] args)
+        private void ToggleRecord(BasePlayer player, params object[] args)
         {
-            recording = !recording;
+            _recording = !_recording;
 
-            player.ChatMessage(Lang("RecordToggle", player.UserIDString, (recording ? "Enabled" : "Disabled")));
+            player.ChatMessage(Lang("RecordToggle", player.UserIDString, (_recording ? "Enabled" : "Disabled")));
         }
 
-        void FindTarget(BasePlayer player, params object[] args)
+        private void FindTarget(BasePlayer player, params object[] args)
         {
             if (args.Length < 1)
             {
@@ -271,7 +271,7 @@ namespace Oxide.Plugins
                 return;
             }
 
-            netId = target.net.ID;
+            _netId = target.net.ID;
 
             player.ChatMessage(Lang("TargetFound", player.UserIDString, target.displayName));
         }
@@ -279,9 +279,9 @@ namespace Oxide.Plugins
 
         #region Commands
         [ChatCommand("vc")]
-        void CommandVoiceClip(BasePlayer player, string command, string[] args)
+        private void CommandVoiceClip(BasePlayer player, string command, string[] args)
         {
-            if (!permission.UserHasPermission(player.UserIDString, permUse))
+            if (!permission.UserHasPermission(player.UserIDString, _permUse))
             {
                 player.ChatMessage(Lang("NoPermission", player.UserIDString));
                 return;
@@ -321,7 +321,7 @@ namespace Oxide.Plugins
         #endregion
 
         #region Helpers
-        string Lang(string key, string id = null, params object[] args) => string.Format(lang.GetMessage(key, this, id), args);
+        private string Lang(string key, string id = null, params object[] args) => string.Format(lang.GetMessage(key, this, id), args);
         #endregion
     }
 }
