@@ -19,7 +19,7 @@ namespace Oxide.Plugins
         private bool _recording;
         private uint _netId;
         private StoredData _stored;
-        static VoiceTroll Instance;
+        private static VoiceTroll Instance;
         #endregion
 
         #region Stored
