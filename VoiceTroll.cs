@@ -42,7 +42,7 @@ namespace Oxide.Plugins
         protected override void LoadDefaultMessages()
         {
             lang.RegisterMessages(new Dictionary<string, string> {
-                { "InvalidSyntax", "Invalid syntax: /vc <play|select|create|remove> <name>\n/vc record, toggle recording.\n/vc target <name|id>, set plaback target." },
+                { "InvalidSyntax", "Invalid syntax: /vt <play|select|create|remove> <name>\n/vt record, toggle recording.\n/vt target <name|id>, set plaback target." },
                 { "NoPermission", "No permission." },
                 { "ClipNotFound", "Clip not found." },
                 { "ClipExists", "Clip already exists." },
@@ -278,7 +278,7 @@ namespace Oxide.Plugins
         #endregion
 
         #region Commands
-        [ChatCommand("vc")]
+        [ChatCommand("vt")]
         private void CommandVoiceClip(BasePlayer player, string command, string[] args)
         {
             if (!permission.UserHasPermission(player.UserIDString, _permUse))
